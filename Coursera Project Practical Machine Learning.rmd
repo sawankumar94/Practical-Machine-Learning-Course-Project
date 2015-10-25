@@ -1,0 +1,68 @@
+---
+output: html_document
+---
+
+---
+
+1.Obtain the data 
+```{r,eval=TRUE,echo=TRUE}
+library(caret) 
+library(randomForest)
+set.seed(32323)
+```
+
+2. creating a training dataset
+```{r,eval=TRUE,echo=TRUE}
+q <- read.csv("pml-training .csv")
+# training data set is expicitly given
+q <- q[,c(11,40,41,42,49,63,64,65,102,116,117,118,140,154,155,156,160)]
+# i chose the columns that inlcluded data from accelerometers on the belt, forearm, arm, and dumbell and classe variable also
+training <- q
+# then make it a new training data set
+
+```
+
+3.Creating a test dataset
+```{r,eval=TRUE,echo=TRUE}
+p<- read.csv("pml-testing.csv")
+# testing data set is expicitly given
+p <- p[,c(11,40,41,42,49,63,64,65,102,116,117,118,140,154,155,156,160)]
+# i chose the columns that inlcluded data from accelerometers on the belt, forearm, arm, and dumbell and problem id variable also
+testing <- p
+# then make it a new training data set
+```
+4.Checking near zero variable
+```{r,eval=TRUE,echo=TRUE}
+nsv <- nearZeroVar(training,saveMetrics=TRUE)
+nsv
+# We can explicitly see from table that we can't ingnore any of the predictor variable as nzv is FALSE for all the predictors. It means all are important
+
+```
+5. Preprocessing the file
+```{r,eval=TRUE,echo=TRUE}
+preObj <- preProcess(training[,-17],method="pca",pcaComp = 10)
+preObj
+```
+6. Creating PCs for training data set
+```{r,eval=TRUE,echo=TRUE}
+trainPC <- predict(preObj,training[,-17])
+
+```
+7.Creting Pcs for testing data set
+```{r,eval=TRUE,echo=TRUE}
+testPC <- predict(preObj,testing[,-17])
+```
+8.run model on outcome and principle components
+
+```{r,eval=TRUE,echo=TRUE}
+#Logic: why i use random forest algorithm for this problem
+# initially i did this problem using "rpart" in train function i got accuracy from finalmodel part was 41 percent and it was right as when i fit it on testing dataset for(20) problems my most of the answere were in correct that would essentially lead to around 40 percent . But when i used random forest i got 89 percent accuracy from finalmodel part, and when i used it on testPC i got my 19 answers correct , only one is incorrect (namely problem ID=3), so expected out of sample of error was (100-89=11%) and estimated out of sample error is (1/20*100= 5%)
+
+modelFit <- train(training$classe ~ .,method="rf",data=trainPC)
+modelFit$finalmodel
+```
+9. predicting on testPC
+```{r,eval=TRUE,echo=TRUE}
+predict(modelFit,testPC)
+```
+
